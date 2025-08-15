@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 
 import userRoutes from "./routes/user.route.js";
-import postRoutes from "./routes/post.route.js";
+import postRoutes from "./routes/post.routes.js";
 import commentRoutes from "./routes/comment.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 
