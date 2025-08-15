@@ -6,6 +6,7 @@ import Comment from "../models/comment.model.js";
 import Notification from "../models/notification.model.js";
 
 import { getAuth } from "@clerk/express";
+import mongoose from "mongoose";
 
 // @desc    Get all comments for a specific post
 export const getComments = asyncHandler(async (req, res) => {
@@ -35,16 +36,31 @@ export const createComment = asyncHandler(async (req, res) => {
     return res.status(404).json({ error: "User or Post not found" });
   }
 
-  const comment = await Comment.create({
-    user: user._id,
-    post: post._id,
-    content,
-  });
+  const session = await mongoose.startSession();
+  let comment;
 
-  // link comment to post
-  await Post.findByIdAndUpdate(postId, {
-    $push: { comments: comment._id },
-  });
+  try {
+    await session.withTransaction(async () => {
+      comment = await Comment.create(
+        {
+          user: user._id,
+          post: post._id,
+          content,
+        },
+        { session }
+      );
+      // link comment to post
+      await Post.findByIdAndUpdate(
+        postId,
+        {
+          $push: { comments: comment._id },
+        },
+        { session }
+      );
+    });
+  } finally {
+    session.endSession();
+  }
 
   // create notification if not commenting on own post
   if (post.user.toString() !== user._id.toString()) {
@@ -79,6 +95,11 @@ export const deleteComment = asyncHandler(async (req, res) => {
   // Remove comment from post
   await Post.findByIdAndUpdate(comment.post, {
     $pull: { comments: commentId },
+  });
+
+  // Remove related notifications
+  await Notification.deleteMany({
+    comment: commentId,
   });
 
   // Remove comment from comment
