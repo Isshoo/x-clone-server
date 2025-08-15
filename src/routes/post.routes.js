@@ -6,9 +6,9 @@ import {
   getPosts,
   getUserPosts,
   likePost,
-} from "../controllers/post.controller";
-import { protectRoute } from "../middlewares/auth.middleware";
-import upload from "../middlewares/upload.middleware";
+} from "../controllers/post.controller.js";
+import { protectRoute } from "../middlewares/auth.middleware.js";
+import upload from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
 
